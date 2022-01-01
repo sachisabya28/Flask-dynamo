@@ -3,7 +3,7 @@ import uuid
 from logging import exception
 from flask import (Blueprint, current_app, jsonify, request)
 
-from app import dynamodb
+from app import dynamodb, dynamodb_client
 
 api = Blueprint('api', __name__, url_prefix='/user')
 
@@ -13,36 +13,42 @@ table = dynamodb.Table('users')
 def get_health():
     return jsonify(status='healthy')
 
-@api.route('/<string:username>', methods=['GET', 'POST'])
-def get_token(username):
+#api to access: /user/token?username= (GET call)
+@api.route('/token', methods=['GET', 'POST'])
+def token():
     try:
-        # existing_tables = dynamodb.list_tables()['TableNames']
-        # if table_name not in existing_tables:
-        #     raise Exception('table not found')
-        
-        result = table.get_item(Key={'username': username})
-        data = result.get('Item')
-            
         if request.method == 'POST':
-            # check if user is not present 
+            content_type = request.headers.get('Content-Type')
+            if (content_type == 'application/json'):
+                post_data = request.json
+                username = post_data['username']
+                
+            result = table.get_item(Key={'username': username})
+            data = result.get('Item')
             if data:
-                return jsonify({'message': 'user already created'})
+                return jsonify(message='user already created')
+                       
             # Save data in DynamoDb table
             token  = uuid.uuid4().hex
             response = table.put_item(Item={'username': username, 'token' : token})
             return jsonify({'message': 'user created', 'token' : token})
-            
+        
+        username = request.args.get('username')
+        result = table.get_item(Key={'username': username})
+        data = result.get('Item')
+
         if data is None:
             return jsonify({'message': 'No user found'})
-        return jsonify(credentails=result.get('Item'))
+        
+        return jsonify(credentails=data)
     except Exception as ex:
-        print(traceback.print_exc())
+        return jsonify(exception = traceback.print_exc())
 
 @api.route('/tables', methods=['GET'])
 def get_tables():
     
-    existing_tables = dynamodb.list_tables()['TableNames']
-    if existing_tables is not None:
+    existing_tables = dynamodb_client.list_tables()['TableNames']
+    if existing_tables is None:
         return jsonify({'message': 'No table found'})
-    return jsonify(existing_tables)
+    return jsonify(tables = existing_tables)
                    
