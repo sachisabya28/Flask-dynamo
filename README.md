@@ -115,6 +115,8 @@ Data not present
 ***
 A list of technologies used within the project:
 Dynamodb - Database
-Flask -  Web framework
-BOTO3 : AWS SDK
 
+Flask -  Web framework
+
+BOTO3 : AWS SDK
+***
