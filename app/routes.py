@@ -22,7 +22,6 @@ def token():
             if (content_type == 'application/json'):
                 post_data = request.json
                 username = post_data['username']
-            print('post_data', post_data)    
             result = table.get_item(Key={'username': username})
             data = result.get('Item')
             if data:
