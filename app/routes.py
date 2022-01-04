@@ -22,7 +22,6 @@ def token():
             if (content_type == 'application/json'):
                 post_data = request.json
                 username = post_data['username']
-                
             result = table.get_item(Key={'username': username})
             data = result.get('Item')
             if data:
@@ -34,6 +33,8 @@ def token():
             return jsonify({'message': 'user created', 'token' : token})
         
         username = request.args.get('username')
+        if not username:
+            return jsonify(message='username not passed')
         result = table.get_item(Key={'username': username})
         data = result.get('Item')
 
@@ -51,4 +52,3 @@ def get_tables():
     if existing_tables is None:
         return jsonify({'message': 'No table found'})
     return jsonify(tables = existing_tables)
-                   
